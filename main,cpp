@@ -1,0 +1,81 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <cmath>
+
+using namespace std;
+
+struct Node {
+    int x, y;
+    int g, h;
+    Node* parent;
+
+    Node(int x, int y, Node* parent = nullptr) : x(x), y(y), g(0), h(0), parent(parent) {}
+
+    int f() const { return g + h; }
+};
+
+struct Compare {
+    bool operator()(Node* a, Node* b) { return a->f() > b->f(); }
+};
+
+int heuristic(int x1, int y1, int x2, int y2) {
+    return abs(x1 - x2) + abs(y1 - y2);
+}
+
+bool isValid(int x, int y, vector<vector<int>>& grid) {
+    return (x >= 0 && y >= 0 && x < grid.size() && y < grid[0].size() && grid[x][y] == 0);
+}
+
+void aStarSearch(vector<vector<int>>& grid, pair<int, int> start, pair<int, int> end) {
+    priority_queue<Node*, vector<Node*>, Compare> openList;
+    vector<vector<bool>> closedList(grid.size(), vector<bool>(grid[0].size(), false));
+
+    Node* startNode = new Node(start.first, start.second);
+    openList.push(startNode);
+
+    int dx[] = {-1, 1, 0, 0};
+    int dy[] = {0, 0, -1, 1};
+
+    while (!openList.empty()) {
+        Node* currentNode = openList.top();
+        openList.pop();
+
+        if (currentNode->x == end.first && currentNode->y == end.second) {
+            cout << "Path found!\n";
+            return;
+        }
+
+        closedList[currentNode->x][currentNode->y] = true;
+
+        for (int i = 0; i < 4; i++) {
+            int newX = currentNode->x + dx[i];
+            int newY = currentNode->y + dy[i];
+
+            if (isValid(newX, newY, grid) && !closedList[newX][newY]) {
+                Node* neighbor = new Node(newX, newY, currentNode);
+                neighbor->g = currentNode->g + 1;
+                neighbor->h = heuristic(newX, newY, end.first, end.second);
+
+                openList.push(neighbor);
+            }
+        }
+    }
+
+    cout << "No path found!\n";
+}
+
+int main() {
+    vector<vector<int>> grid = {{0, 0, 0, 0},
+                                {1, 1, 0, 1},
+                                {0, 0, 0, 0},
+                                {0, 1, 1, 0},
+                                {0, 0, 0, 0}};
+
+    pair<int, int> start = {0, 0};
+    pair<int, int> end = {4, 3};
+
+    aStarSearch(grid, start, end);
+
+    return 0;
+}
